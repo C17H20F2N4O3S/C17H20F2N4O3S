@@ -1,29 +1,10 @@
-<p align="center"><img src="./assets/header.svg" alt="Omar Emam — Westlake University ’30 | Researcher in Computational Biology | Effective Altruism Advocate | AI Safety Fellow" width="100%"/></p>
+<p align="center"><img src="./header.svg" alt="Omar Emam — Computational Biology Researcher, ML × Biology, AI Safety Fellow, Effective Altruism Advocate" width="100%"/></p>
 
 Computational biology undergrad at **Westlake University**, researching in Professor Jianyang Zeng's **AICB Lab**. I build models that try to predict biology instead of just describing it.
 
-- 🧬 Co-first author of **ColiFormer** (*Bioengineering*, 2026) — transformer-based codon optimization for *E. coli*
-- 🔭 Currently: evolution-aware foundation models for forecasting viral evolution
+- 🔭 Currently: virtual cell models that predict how human cells respond to genetic perturbations
 - 🧰 Python on Linux, PyTorch, single-cell and sequence models
 - 📫 [LinkedIn](https://www.linkedin.com/in/omar-sherif-emam) · omarsherifnaguib@gmail.com
-
----
-
-### What I'm working on
-
-| Project | What it is |
-|---|---|
-| [**ColiFormer**](https://github.com/SAKETH11111/ColiFormer) | Transformer codon optimizer for *E. coli*: +6.2% CAI and +8.6% tAI over CodonTransformer, GC held at 52%. Co-first author, *Bioengineering* 2026. |
-| **Viral Evolution Model** | Foundation model that learns evolutionary pressure, not just sequence likelihood. In progress. |
-| [**vcm**](https://github.com/omarvelously/vcm) | Virtual cell model. In progress. |
-
----
-
-### Stack
-
-<p align="center"><img src="./assets/stack.svg" alt="Python, C++, Java, Bash, SQL, PyTorch, JAX, TensorFlow, Keras, Hugging Face, scikit-learn, NumPy, pandas, OpenCV, CUDA, Linux, Git, Docker, Google Cloud, AWS, Azure" width="100%"/></p>
-
----
 
 ### Stats
 
@@ -35,6 +16,12 @@ Computational biology undergrad at **Westlake University**, researching in Profe
 <p align="left">
   <img src="https://github-readme-streak-stats.herokuapp.com/?user=omarvelously&hide_border=true" alt="Streak" />
 </p>
+
+### Publications
+
+**ColiFormer: A Transformer-Based Codon Optimization Model Balancing Multiple Objectives for Enhanced *E. coli* Gene Expression**<br/>
+Emam, O., et al. *Bioengineering*, 2026. Co-first author.<br/>
+[Paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC12838208/) · [Code](https://github.com/SAKETH11111/ColiFormer)
 
 ---
 
