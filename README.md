@@ -1,4 +1,4 @@
-# Omar Emam
+<p align="center"><img src="./assets/header.svg" alt="Omar Emam — Westlake University ’30 | Researcher in Computational Biology | Effective Altruism Advocate | AI Safety Fellow" width="100%"/></p>
 
 Computational biology undergrad at **Westlake University**, researching in Professor Jianyang Zeng's **AICB Lab**. I build models that try to predict biology instead of just describing it.
 
@@ -19,10 +19,9 @@ Computational biology undergrad at **Westlake University**, researching in Profe
 
 ---
 
-### Coding time
+### Stack
 
-<!--START_SECTION:waka-->
-<!--END_SECTION:waka-->
+<p align="center"><img src="./assets/stack.svg" alt="Python, C++, Java, Bash, SQL, PyTorch, JAX, TensorFlow, Keras, Hugging Face, scikit-learn, NumPy, pandas, OpenCV, CUDA, Linux, Git, Docker, Google Cloud, AWS, Azure" width="100%"/></p>
 
 ---
 
