@@ -15,11 +15,6 @@ Emam, O., et al. *Bioengineering*, 2026. Co-first author.<br/>
 ### Stats
 
 <p align="left">
-  <img height="165" src="https://github-readme-stats.vercel.app/api?username=omarvelously&show_icons=true&include_all_commits=true&count_private=true&hide_border=true&theme=default" alt="GitHub stats" />
-  <img height="165" src="https://github-readme-stats.vercel.app/api/top-langs/?username=omarvelously&layout=compact&langs_count=8&hide_border=true&theme=default" alt="Top languages" />
-</p>
-
-<p align="left">
   <img src="https://github-readme-streak-stats.herokuapp.com/?user=omarvelously&hide_border=true" alt="Streak" />
 </p>
 
