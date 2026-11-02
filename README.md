@@ -15,7 +15,7 @@ Emam, O., et al. *Bioengineering*, 2026. Co-first author.<br/>
 ### Stats
 
 <p align="left">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=omarvelously&hide_border=true" alt="Streak" />
+  <img src="https://streak-stats.demolab.com/?user=omarvelously&hide_border=true&timezone=Asia/Shanghai" alt="Streak" />
 </p>
 
 ---
