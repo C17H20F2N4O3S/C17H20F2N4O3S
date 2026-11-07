@@ -81,6 +81,21 @@ def header_background(path, height):
     layers = body[:stop]
     layers = re.sub(r'(<rect width="\d+") height="\d+"', rf'\1 height="{height}"', layers, count=1)
 
+    # the header leaves holes in some letter rows where its title sits; the card has no title there, so those rows
+    # are filled out to the full width (same letters in the faint layer and in the teal scan layer)
+    full_x = " ".join(str(3 + 14 * k) for k in range(86))
+
+    def fill_row(m):
+        y, seq = m.group(2), m.group(4)
+        if len(seq) >= 86:
+            return m.group(0)
+        import random
+        rng = random.Random(int(y))
+        seq = "".join(rng.choice("ACGT") for _ in range(86))
+        return f'{m.group(1)}y="{y}" x="{full_x}"{m.group(3)}>{seq}</text>'
+    layers = re.sub(r'(<text class="w" fill="#(?:e6edf3|2dd4bf)" )y="(\d+)" x="[^"]*"([^>]*)>([ACGT]*)</text>',
+                    fill_row, layers)
+
     def keep(m):                                                     # drop letters below the card
         y = re.search(r'\by="([\d.]+)"', m.group(0))
         return m.group(0) if y is None or float(y.group(1)) <= height else ""
