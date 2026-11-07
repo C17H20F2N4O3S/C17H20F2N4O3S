@@ -1,0 +1,27 @@
+name: Contributions card
+on:
+  # every 6 hours; the card is only committed when it changed
+  schedule: [{cron: "17 */6 * * *"}]
+  workflow_dispatch:
+  push: {branches: [main], paths: ["scripts/contrib_card.py", ".github/workflows/contrib.yml"]}
+jobs:
+  card:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Draw the card
+        # personal access token (no scopes) saved as a repository secret, never in this file
+        env:
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+        run: python scripts/contrib_card.py --user omarvelously --start 2026-09-29 --out contributions.svg
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add contributions.svg
+          git diff --cached --quiet || { git commit -m "Update contributions card [skip ci]" && git push; }
