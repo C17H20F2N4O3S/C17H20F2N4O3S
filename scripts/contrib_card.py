@@ -3,7 +3,7 @@
 Reads the contribution calendar from GitHub's GraphQL API (token in GH_TOKEN; no scopes needed) and writes a card with
 the daily squares, total contributions, current streak and longest streak. No averages.
 
-    GH_TOKEN=... python scripts/contrib_card.py --user omarvelously --start 2026-09-29 --out contributions.svg
+    GH_TOKEN=... python scripts/contrib_card.py --user C17H20F2N4O3S --start 2026-09-29 --out contributions.svg
 """
 import argparse
 import datetime as dt
@@ -103,7 +103,7 @@ def header_background(path, height):
     return defs + f"<style>{style}</style>", layers
 
 
-def render(counts, start, today, user="omarvelously", header="header.svg"):
+def render(counts, start, today, user="Omarigliptin", header="header.svg"):
     """A year of days drawn as a DNA sequence: one base per day, lit in the header's purple -> teal gradient by
     activity; the bases light up left to right like a sequencing read; today blinks."""
     import hashlib
@@ -182,7 +182,8 @@ def render(counts, start, today, user="omarvelously", header="header.svg"):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--user", default="omarvelously")
+    p.add_argument("--user", default="C17H20F2N4O3S", help="GitHub login the contributions are read from")
+    p.add_argument("--label", default="Omarigliptin", help="name shown on the card")
     p.add_argument("--start", default="2026-09-29")
     p.add_argument("--out", default="contributions.svg")
     p.add_argument("--header", default="header.svg", help="background is taken from this SVG")
@@ -192,7 +193,7 @@ def main():
     today = dt.datetime.now(ZoneInfo(a.tz)).date()
     start = dt.date.fromisoformat(a.start)
     counts = fetch(a.user, start, today, os.environ["GH_TOKEN"])
-    svg = render(counts, start, today, a.user, a.header)
+    svg = render(counts, start, today, a.label, a.header)
     with open(a.out, "w") as f:
         f.write(svg)
     print(f"wrote {a.out}: {sum(c for d, c in counts.items() if start <= d <= today)} contributions, "
