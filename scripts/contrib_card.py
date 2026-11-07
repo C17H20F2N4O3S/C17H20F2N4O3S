@@ -64,42 +64,62 @@ def mix(t):
     return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(a, b))
 
 
-def render(counts, start, today, user="omarvelously"):
-    import random
-    # the grid always shows a full year of days: from `start` for its first year (future days as outlines), then the
-    # last 365 days
+def header_background(path, height):
+    """The background layers of header.svg (backdrop, drifting glow, DNA letters, teal scan, flickering bases),
+    cut to `height`. Falls back to a plain backdrop if the header is missing."""
+    import re
+    try:
+        src = open(path).read()
+    except OSError:
+        return "", f'<rect width="{W}" height="{height}" rx="16" fill="{BG}"/>'
+    defs = re.search(r"<defs>(.*?)</defs>", src, re.S).group(1)
+    defs = re.sub(r'<linearGradient id="g".*?</linearGradient>', "", defs, flags=re.S)       # keep our own gradient
+    defs = re.sub(r'(<clipPath id="scan"><rect[^>]*?)height="\d+"', rf'\1height="{height}"', defs)
+    style = re.search(r"<style>(.*?)</style>", src, re.S).group(1)
+    body = src[src.index("</style>") + len("</style>"):]
+    stop = body.index('<g fill="url(#g)"') if '<g fill="url(#g)"' in body else len(body)   # the title starts here
+    layers = body[:stop]
+    layers = re.sub(r'(<rect width="\d+") height="\d+"', rf'\1 height="{height}"', layers, count=1)
+
+    def keep(m):                                                     # drop letters below the card
+        y = re.search(r'\by="([\d.]+)"', m.group(0))
+        return m.group(0) if y is None or float(y.group(1)) <= height else ""
+    layers = re.sub(r"<text\b[^>]*>.*?</text>", keep, layers, flags=re.S)
+    return defs + f"<style>{style}</style>", layers
+
+
+def render(counts, start, today, user="omarvelously", header="header.svg"):
+    """A year of days drawn as a DNA sequence: one base per day, lit in the header's purple -> teal gradient by
+    activity; the bases light up left to right like a sequencing read; today blinks."""
+    import hashlib
+    H = 340
     g0 = start if today < start + dt.timedelta(365) else today - dt.timedelta(364)
     g1 = g0 + dt.timedelta(364)
-    first = g0 - dt.timedelta((g0.weekday() + 1) % 7)                # Sunday of the first week (GitHub layout)
+    first = g0 - dt.timedelta((g0.weekday() + 1) % 7)
     nweeks = (g1 - first).days // 7 + 1
     inside = {d: c for d, c in counts.items() if start <= d <= today}
     top = max(list(inside.values()) or [1])
     total = sum(inside.values())
     cur, best = streaks(counts, start, today)
-    cal_x, cal_y, avail = 112, 92, 600
-    step = max(12, min(26, avail // max(nweeks, 1)))                 # square + gap, shrinks as weeks accumulate
-    cell = step - 4
-    H = max(300, cal_y + 7 * step + 56)
+    cal_x, cal_y = 128, 118
+    step = max(11, min(22, 640 // nweeks))                          # column step
+    rh = 19                                                          # row step
+    hdefs, layers = header_background(header, H)
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">',
-         '<defs>',
-         f'<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="{cal_x}" x2="{W - 80}" y1="0" y2="0">'
-         f'<stop offset="0" stop-color="{PURPLE}"/><stop offset="1" stop-color="{TEAL}"/></linearGradient>',
-         f'<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="{PURPLE}" stop-opacity=".28"/>'
-         f'<stop offset="1" stop-color="{PURPLE}" stop-opacity="0"/></radialGradient>',
-         '</defs>',
-         f'<style>.w{{font:13px {MONO}}}.lbl{{font:12px {MONO};fill:{MUTED};letter-spacing:1px}}'
-         f'.v{{font:800 30px {MONO}}}.ty{{font:15px {MONO};fill:{FG}}}</style>',
-         f'<rect width="{W}" height="{H}" rx="16" fill="{BG}"/>',
-         f'<circle cx="{W * .42:.0f}" cy="{H * .45:.0f}" r="420" fill="url(#glow)"/>']
-    rng = random.Random(7)                                            # fixed seed: the backdrop never changes
-    xs = " ".join(str(3 + 14 * k) for k in range(86))
-    for r in range(17):
-        seq = "".join(rng.choice("ACGT") for _ in range(86))
-        o.append(f'<text class="w" fill="{FG}" fill-opacity="0.075" y="{13 + 18 * r}" x="{xs}">{seq}</text>')
-    o.append(f'<text class="lbl" x="70" y="44">&gt;{escape(user)} · contributions since '
+         f'<defs>{hdefs.split("<style>")[0]}'
+         f'<linearGradient id="cg" gradientUnits="userSpaceOnUse" x1="{cal_x}" x2="{W - 60}" y1="0" y2="0">'
+         f'<stop offset="0" stop-color="{PURPLE}"/><stop offset="1" stop-color="{TEAL}"/></linearGradient>'
+         f'<clipPath id="card"><rect width="{W}" height="{H}" rx="16"/></clipPath></defs>',
+         "<style>" + (hdefs.split("<style>")[1].split("</style>")[0] if "<style>" in hdefs else "") +
+         f".b{{font:700 {min(step, rh) - 1}px {MONO}}}.v{{font:800 30px {MONO}}}</style>",
+         f'<g clip-path="url(#card)">', layers]
+    px0, px1 = cal_x - 62, cal_x + nweeks * step + 10                # a dark "readout" panel behind the days
+    o.append(f'<rect x="{px0}" y="{cal_y - 46}" width="{px1 - px0}" height="{7 * rh + 54}" rx="12" fill="{BG}" '
+             f'fill-opacity="0.82" stroke="{TEAL}" stroke-opacity="0.18"/>')
+    o.append(f'<text class="lbl" x="70" y="44">&gt;{escape(user)} · {total:,} bp · since '
              f'{start.strftime("%-d %b %Y")}</text>')
     for k, nm in ((1, "Mon"), (3, "Wed"), (5, "Fri")):
-        o.append(f'<text class="lbl" x="70" y="{cal_y + k * step + cell - 3}">{nm}</text>')
+        o.append(f'<text class="lbl" x="{cal_x - 50}" y="{cal_y + k * rh}">{nm}</text>')
     last_month = None
     for w in range(nweeks):
         ws = first + dt.timedelta(7 * w)
@@ -109,35 +129,44 @@ def render(counts, start, today, user="omarvelously"):
         firsts = [d for d in shown if d.day == 1]
         m = firsts[0] if firsts else (shown[0] if shown and w == 0 else None)
         if m is not None and m.month != last_month:
-            o.append(f'<text class="lbl" x="{x}" y="{cal_y - 10}">{m.strftime("%b")}</text>')
+            o.append(f'<text class="lbl" x="{x}" y="{cal_y - 24}">{m.strftime("%b")}</text>')
             last_month = m.month
         colour = mix(w / max(nweeks - 1, 1))
         for k, d in enumerate(days):
             if d not in shown:
                 continue
-            if d > today:                                             # not yet: outline only
-                o.append(f'<rect x="{x}" y="{cal_y + k * step}" width="{cell}" height="{cell}" rx="3" fill="none" '
-                         f'stroke="{FG}" stroke-opacity="0.07"/>')
+            base = "ACGT"[hashlib.md5(d.isoformat().encode()).digest()[0] % 4]
+            y = cal_y + k * rh
+            if d > today:
+                o.append(f'<text class="b" x="{x}" y="{y}" fill="{FG}" fill-opacity="0.10">{base}</text>')
                 continue
-            c = counts.get(d, 0) if d >= start else 0                 # activity counted from `start`
+            c = counts.get(d, 0) if d >= start else 0
             tip = f'<title>{d.isoformat()}: {c} contribution{"" if c == 1 else "s"}</title>'
-            if c <= 0:
-                o.append(f'<rect x="{x}" y="{cal_y + k * step}" width="{cell}" height="{cell}" rx="3" fill="{FG}" '
-                         f'fill-opacity="0.06" stroke="{FG}" stroke-opacity="0.08">{tip}</rect>')
+            if d == today:
+                o.append(f'<text class="b" x="{x}" y="{y}" fill="{TEAL}">{base}{tip}<animate attributeName="opacity" '
+                         f'values="1;.15;1" dur="1.2s" repeatCount="indefinite"/></text>')
+            elif c <= 0:
+                o.append(f'<text class="b" x="{x}" y="{y}" fill="{FG}" fill-opacity="0.22">{base}{tip}</text>')
             else:
-                op = (0.35, 0.55, 0.78, 1.0)[min(3, int(4 * c / (top + 1e-9)))] if top > 0 else 1.0
-                o.append(f'<rect x="{x}" y="{cal_y + k * step}" width="{cell}" height="{cell}" rx="3" fill="{colour}" '
-                         f'fill-opacity="{op}">{tip}</rect>')
-    sx = 820
+                op = (0.45, 0.65, 0.85, 1.0)[min(3, int(4 * c / (top + 1e-9)))]
+                o.append(f'<text class="b" x="{x}" y="{y}" fill="{colour}" opacity="0">{base}{tip}'
+                         f'<animate attributeName="opacity" from="0" to="{op}" begin="{0.4 + 0.035 * w:.2f}s" '
+                         f'dur=".5s" fill="freeze"/></text>')
+    sx = 860
     for i, (lab, val) in enumerate((("CONTRIBUTIONS", f"{total:,}"),
                                     ("CURRENT STREAK", f"{cur} day{'s' if cur != 1 else ''}"),
                                     ("LONGEST STREAK", f"{best} day{'s' if best != 1 else ''}"))):
-        y = cal_y + 6 + i * 62
+        y = cal_y - 22 + i * 64
         o.append(f'<text class="lbl" x="{sx}" y="{y}">{lab}</text>')
-        o.append(f'<text class="v" x="{sx}" y="{y + 34}" fill="url(#g)">{escape(val)}</text>')
-    ty = cal_y + 7 * step + 34
-    o.append(f'<text class="ty" x="70" y="{ty}"><tspan fill="{TEAL}">&gt;</tspan> updated {today.isoformat()}</text>')
-    o.append("</svg>")
+        o.append(f'<text class="v" x="{sx}" y="{y + 34}" fill="url(#cg)">{escape(val)}</text>')
+    ty = cal_y + 6 * rh + 70
+    line = f"updated {today.isoformat()}"
+    o.append(f'<text class="ty" x="70" y="{ty}"><tspan fill="{TEAL}">&gt;</tspan> {line}</text>')
+    cx = 70 + 14.45 * (len(line) + 2) + 4                              # 24px mono advance ~14.45px
+    o.append(f'<rect x="{cx:.0f}" y="{ty - 20}" width="12" height="26" fill="{TEAL}">'
+             f'<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;.5;.5;1" dur="1s" '
+             f'repeatCount="indefinite"/></rect>')
+    o.append("</g></svg>")
     return "\n".join(o)
 
 
@@ -146,13 +175,14 @@ def main():
     p.add_argument("--user", default="omarvelously")
     p.add_argument("--start", default="2026-09-29")
     p.add_argument("--out", default="contributions.svg")
+    p.add_argument("--header", default="header.svg", help="background is taken from this SVG")
     p.add_argument("--tz", default="Asia/Shanghai", help="time zone that decides which day is 'today'")
     a = p.parse_args()
     from zoneinfo import ZoneInfo
     today = dt.datetime.now(ZoneInfo(a.tz)).date()
     start = dt.date.fromisoformat(a.start)
     counts = fetch(a.user, start, today, os.environ["GH_TOKEN"])
-    svg = render(counts, start, today)
+    svg = render(counts, start, today, a.user, a.header)
     with open(a.out, "w") as f:
         f.write(svg)
     print(f"wrote {a.out}: {sum(c for d, c in counts.items() if start <= d <= today)} contributions, "
