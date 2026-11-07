@@ -21,7 +21,7 @@ jobs:
         run: python scripts/contrib_card.py --user C17H20F2N4O3S --start 2026-09-29 --out contributions.svg
       - name: Commit if changed
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Omar Sherif"
+          git config user.email "316535926+OmarWestlakeEmam@users.noreply.github.com"
           git add contributions.svg
           git diff --cached --quiet || { git commit -m "Update contributions card [skip ci]" && git push; }
