@@ -140,7 +140,7 @@ def render(counts, start, today, user="omarvelously", header="header.svg"):
         shown = [d for d in days if g0 <= d <= g1]
         firsts = [d for d in shown if d.day == 1]
         m = firsts[0] if firsts else (shown[0] if shown and w == 0 else None)
-        if m is not None and m.month != last_month:
+        if m is not None and m.month != last_month and m <= today:   # month labels appear with their days
             o.append(f'<text class="lbl" x="{x}" y="{cal_y - 12}">{m.strftime("%b")}</text>')
             last_month = m.month
         colour = mix(w / max(nweeks - 1, 1))
@@ -149,8 +149,7 @@ def render(counts, start, today, user="omarvelously", header="header.svg"):
                 continue
             y = cal_y + k * rh
             sq = f'x="{x}" y="{y}" width="{step - 4}" height="{step - 4}" rx="3"'
-            if d > today:                                             # not yet: outline only
-                o.append(f'<rect {sq} fill="none" stroke="{FG}" stroke-opacity="0.08"/>')
+            if d > today:                                             # not yet: nothing drawn until the day comes
                 continue
             c = counts.get(d, 0) if d >= start else 0
             tip = f'<title>{d.isoformat()}: {c} contribution{"" if c == 1 else "s"}</title>'
