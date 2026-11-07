@@ -15,7 +15,7 @@ Emam, O., et al. *Bioengineering*, 2026. Co-first author.<br/>
 ### Stats
 
 <p align="left">
-   <img src="./metrics.isocalendar.svg" alt="Contribution calendar and streak" />
+   <img src="./contributions.svg" alt="Contributions and streak since 29 Sep 2026" width="100%" />
 </p>
 
 ---
