@@ -18,7 +18,7 @@ jobs:
         # personal access token (no scopes) saved as a repository secret, never in this file
         env:
           GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
-        run: python scripts/contrib_card.py --user omarvelously --start 2026-09-29 --out contributions.svg
+        run: python scripts/contrib_card.py --user C17H20F2N4O3S --start 2026-09-29 --out contributions.svg
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
