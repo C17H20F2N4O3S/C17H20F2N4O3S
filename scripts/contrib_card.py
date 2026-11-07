@@ -20,7 +20,7 @@ MONO = "'JetBrains Mono','SFMono-Regular',Menlo,Consolas,'Liberation Mono',monos
 W = 1204
 
 
-def fetch(user, start, end, token):
+def fetch_range(user, start, end, token):
     body = json.dumps({"query": QUERY, "variables": {
         "login": user, "from": f"{start}T00:00:00Z", "to": f"{end}T23:59:59Z"}}).encode()
     req = urllib.request.Request("https://api.github.com/graphql", data=body, headers={
@@ -31,6 +31,16 @@ def fetch(user, start, end, token):
         raise SystemExit(f"GraphQL error: {data['errors']}")
     weeks = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
     return {dt.date.fromisoformat(d["date"]): d["contributionCount"] for w in weeks for d in w["contributionDays"]}
+
+
+def fetch(user, start, end, token):
+    """The API returns at most one year per call: fetch in chunks."""
+    out, a = {}, start
+    while a <= end:
+        b = min(end, a + dt.timedelta(days=360))
+        out.update({d: c for d, c in fetch_range(user, a, b, token).items() if a <= d <= b})
+        a = b + dt.timedelta(days=1)
+    return out
 
 
 def streaks(counts, start, today):
@@ -56,8 +66,12 @@ def mix(t):
 
 def render(counts, start, today, user="omarvelously"):
     import random
-    first = start - dt.timedelta((start.weekday() + 1) % 7)          # Sunday of the start week (GitHub layout)
-    nweeks = (today - first).days // 7 + 1
+    # the grid always shows a full year of days: from `start` for its first year (future days as outlines), then the
+    # last 365 days
+    g0 = start if today < start + dt.timedelta(365) else today - dt.timedelta(364)
+    g1 = g0 + dt.timedelta(364)
+    first = g0 - dt.timedelta((g0.weekday() + 1) % 7)                # Sunday of the first week (GitHub layout)
+    nweeks = (g1 - first).days // 7 + 1
     inside = {d: c for d, c in counts.items() if start <= d <= today}
     top = max(list(inside.values()) or [1])
     total = sum(inside.values())
@@ -91,7 +105,7 @@ def render(counts, start, today, user="omarvelously"):
         ws = first + dt.timedelta(7 * w)
         x = cal_x + w * step
         days = [ws + dt.timedelta(k) for k in range(7)]
-        shown = [d for d in days if start <= d <= today]
+        shown = [d for d in days if g0 <= d <= g1]
         firsts = [d for d in shown if d.day == 1]
         m = firsts[0] if firsts else (shown[0] if shown and w == 0 else None)
         if m is not None and m.month != last_month:
@@ -101,7 +115,11 @@ def render(counts, start, today, user="omarvelously"):
         for k, d in enumerate(days):
             if d not in shown:
                 continue
-            c = counts.get(d, 0)
+            if d > today:                                             # not yet: outline only
+                o.append(f'<rect x="{x}" y="{cal_y + k * step}" width="{cell}" height="{cell}" rx="3" fill="none" '
+                         f'stroke="{FG}" stroke-opacity="0.07"/>')
+                continue
+            c = counts.get(d, 0) if d >= start else 0                 # activity counted from `start`
             tip = f'<title>{d.isoformat()}: {c} contribution{"" if c == 1 else "s"}</title>'
             if c <= 0:
                 o.append(f'<rect x="{x}" y="{cal_y + k * step}" width="{cell}" height="{cell}" rx="3" fill="{FG}" '
